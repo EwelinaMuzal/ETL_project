@@ -2,6 +2,12 @@ import requests
 import logging
 import json
 
+from minio import Minio
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -32,3 +38,20 @@ if __name__=="__main__":
         json.dump(result,file)
 
     logger.info(result)
+
+
+    client = Minio("localhost:9000",
+            access_key=os.environ["MINIO_ACCESS_KEY"],
+            secret_key=os.environ["MINIO_SECRET_KEY"],
+            secure = False
+    )
+
+    bucket_name = os.environ["MINIO_BUCKET"]
+    destination_file = "raw/api/exchange_rates.json"
+    file_path = "data/raw_local/api/exchange_rates.json"
+    found = client.bucket_exists(bucket_name)
+
+    if not found:
+        client.make_bucket(bucket_name)
+    client.fput_object(bucket_name, destination_file, file_path)
+        
